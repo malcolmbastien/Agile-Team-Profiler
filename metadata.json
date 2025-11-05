@@ -1,0 +1,5 @@
+{
+  "name": "Agile Team Profiler",
+  "description": "Analyze your team's agile practices and visualize their trade-offs. Add descriptions of your practices, and an AI-powered coach will score them across key agile attributes, helping you understand your team's unique strengths and weaknesses.",
+  "requestFramePermissions": []
+}
