@@ -24,4 +24,6 @@ export interface PracticeSummary {
   summary: string;
   positive_impacts: string[];
   negative_impacts: string[];
+  key_pros: string[];
+  key_cons: string[];
 }

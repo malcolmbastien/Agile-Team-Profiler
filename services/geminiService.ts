@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { ATTRIBUTES, PRACTICE_CATEGORIES } from '../constants';
 import type { Scores, Practice, Recommendation, PracticeSummary } from '../types';
@@ -45,9 +46,19 @@ const fullAnalysisSchema = {
           type: Type.ARRAY,
           description: 'An array of attribute IDs that are negatively impacted by the practice.',
           items: { type: Type.STRING, enum: ATTRIBUTES.map(a => a.id) }
+        },
+        key_pros: {
+          type: Type.ARRAY,
+          description: 'Up to 3 key positive takeaways or benefits from the practice, as short sentences.',
+          items: { type: Type.STRING }
+        },
+        key_cons: {
+          type: Type.ARRAY,
+          description: 'Up to 3 key negative takeaways or trade-offs from the practice, as short sentences.',
+          items: { type: Type.STRING }
         }
       },
-      required: ['summary', 'positive_impacts', 'negative_impacts'],
+      required: ['summary', 'positive_impacts', 'negative_impacts', 'key_pros', 'key_cons'],
     }
   },
   required: ['scores', 'category', 'summary'],
@@ -61,7 +72,7 @@ export async function analyzePractice(description: string): Promise<{ scores: Sc
       model: "gemini-2.5-flash",
       contents: `Analyze the following agile practice description and return the full JSON analysis:\n\n"${description}"\n\n**Available Attributes for analysis:**\n${attributeContext}`,
       config: {
-        systemInstruction: `You are an expert Agile Coach. Your task is to analyze a description of an agile team practice. You must evaluate it against a predefined set of attributes, categorize it, and provide a concise summary of its trade-offs. Respond only with a single, valid JSON object that adheres to the provided schema. The scores for each attribute should range from -5 (strong negative impact) to +5 (strong positive impact). The category must be one of the following: ${PRACTICE_CATEGORIES.join(', ')}. The summary should be 2-3 sentences and should align with the identified positive and negative impacts.`,
+        systemInstruction: `You are an expert Agile Coach. Your task is to analyze a description of an agile team practice. You must evaluate it against a predefined set of attributes, categorize it, and provide a concise summary of its trade-offs. Respond only with a single, valid JSON object that adheres to the provided schema. The scores for each attribute should range from -5 (strong negative impact) to +5 (strong positive impact). The category must be one of the following: ${PRACTICE_CATEGORIES.join(', ')}. The summary should contain a 2-3 sentence overview, and up to 3 key pros and 3 key cons as short, distinct sentences.`,
         responseMimeType: "application/json",
         responseSchema: fullAnalysisSchema,
       },
@@ -144,5 +155,22 @@ export async function generateActionPlan(practices: Practice[], totalScores: Sco
   } catch (error) {
     console.error("Error generating action plan with Gemini API:", error);
     throw new Error("Failed to get action plan from AI. The API key might be invalid or the service may be unavailable.");
+  }
+}
+
+export async function generatePracticeIdea(): Promise<string> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: "Generate a short, one-sentence description of a specific agile software development team practice. For example: 'We hold a daily stand-up meeting for 15 minutes to sync on progress and blockers.' or 'All new features require a detailed design document that is reviewed by an architecture committee.'",
+      config: {
+        systemInstruction: `You are an expert Agile Coach. Your task is to provide a single, concise description of a common or interesting agile team practice. Respond only with the text of the practice description, without any quotes, preamble, or explanation.`,
+      },
+    });
+
+    return response.text.trim();
+  } catch (error) {
+    console.error("Error generating practice idea with Gemini API:", error);
+    throw new Error("Failed to generate a practice idea from AI.");
   }
 }

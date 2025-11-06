@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { analyzePractice, generateActionPlan } from './services/geminiService';
+import { analyzePractice, generateActionPlan, generatePracticeIdea } from './services/geminiService';
 import type { Practice, Scores, Recommendation } from './types';
 import { ATTRIBUTES } from './constants';
 import PracticeInput from './components/PracticeInput';
@@ -7,7 +7,6 @@ import PracticeList from './components/PracticeList';
 import TeamProfile from './components/CharacterSheet';
 import PracticeDetailModal from './components/PracticeDetailModal';
 import ActionPlan from './components/ActionPlan';
-import ExamplePractices from './components/ExamplePractices';
 
 function App() {
   const [practices, setPractices] = useState<Practice[]>([]);
@@ -16,6 +15,7 @@ function App() {
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<Practice | null>(null);
+  const [isGeneratingIdea, setIsGeneratingIdea] = useState<boolean>(false);
 
   // New state for Action Plan
   const [actionPlan, setActionPlan] = useState<Recommendation[] | null>(null);
@@ -128,35 +128,51 @@ function App() {
       setIsGeneratingPlan(false);
     }
   };
+  
+  const handleGenerateIdea = async () => {
+    setIsGeneratingIdea(true);
+    setError(null);
+    try {
+      const idea = await generatePracticeIdea();
+      setPracticeDescription(idea);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred while generating an idea.');
+      }
+    } finally {
+      setIsGeneratingIdea(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-900 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-50 font-sans p-4 sm:p-6 lg:p-8">
       <header className="text-center mb-8 lg:mb-12">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-cyan-500">
           Agile Team Profiler
         </h1>
-        <p className="mt-2 text-lg text-slate-300 max-w-3xl mx-auto">
+        <p className="mt-2 text-lg text-slate-600 max-w-5xl mx-auto">
           Translate your team's ways of working into a profile highlighting its strengths and trade-offs.
         </p>
       </header>
 
       {error && (
-        <div className="bg-rose-900/50 border border-rose-700 text-rose-200 p-4 rounded-lg mb-6 max-w-4xl mx-auto text-center">
+        <div className="bg-rose-100 border border-rose-400 text-rose-700 p-4 rounded-lg mb-6 max-w-4xl mx-auto text-center">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 lg:gap-8">
         <div className="space-y-8">
-          <div>
-            <PracticeInput 
-              description={practiceDescription}
-              onDescriptionChange={setPracticeDescription}
-              onAddPractice={handleAddPractice} 
-              isLoading={isLoading} 
-            />
-            <ExamplePractices onSelect={setPracticeDescription} />
-          </div>
+          <PracticeInput
+            description={practiceDescription}
+            onDescriptionChange={setPracticeDescription}
+            onAddPractice={handleAddPractice}
+            isLoading={isLoading}
+            onGenerateIdea={handleGenerateIdea}
+            isGeneratingIdea={isGeneratingIdea}
+          />
           <PracticeList
             practices={practices}
             onRemovePractice={handleRemovePractice}
@@ -185,7 +201,7 @@ function App() {
         />
       )}
 
-      <footer className="text-center mt-12 py-4 text-slate-500 text-sm border-t border-slate-800">
+      <footer className="text-center mt-12 py-4 text-slate-500 text-sm border-t border-slate-200">
         <p>Powered by Google Gemini. Built for visualizing agile trade-offs.</p>
       </footer>
     </div>

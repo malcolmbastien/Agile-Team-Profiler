@@ -30,21 +30,21 @@ const PracticeList: React.FC<PracticeListProps> = ({ practices, onRemovePractice
 
   if (practices.length === 0) {
     return (
-      <div className="text-center py-10 px-4 bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-700">
-        <h3 className="text-lg font-medium text-slate-300">No practices added yet.</h3>
-        <p className="text-slate-400">Add your first practice above to build your team profile.</p>
+      <div className="text-center py-10 px-4 bg-white rounded-lg border-2 border-dashed border-slate-200">
+        <h3 className="text-xl font-medium text-slate-700">No practices added yet.</h3>
+        <p className="text-slate-500 mt-1">Add your first practice above to build your team profile.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium text-slate-100 mb-2">
+    <div className="space-y-8">
+      <h3 className="text-xl font-semibold text-slate-900 mb-2">
         Added Practices
       </h3>
       {sortedCategories.map((category) => (
         <div key={category}>
-          <h4 className="text-md font-semibold text-sky-400 mb-3 border-b border-gray-700 pb-2">
+          <h4 className="text-lg font-semibold text-sky-600 mb-3 border-b border-slate-200 pb-2">
             {category}
           </h4>
           <div className="space-y-3">
